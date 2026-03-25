@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>발음 연습기</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;600&family=Noto+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e12;
+    --surface: #16161e;
+    --card: #1e1e2a;
+    --border: #2e2e3e;
+    --accent: #e8c97e;
+    --accent2: #7eb8e8;
+    --text: #f0eee8;
+    --muted: #888098;
+    --ru: #e87e7e;
+    --es: #7ee8b4;
+    --en: #e8c97e;
+    --ja: #e87ec8;
+    --ky: #a07ee8;
+    --danger: #e87e7e;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 60px;
+  }
+
+  /* Header */
+  header {
+    width: 100%;
+    max-width: 480px;
+    padding: 40px 24px 0;
+    text-align: center;
+  }
+
+  .app-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .app-sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+
+  /* Language Selector */
+  .lang-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 28px 0 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px;
+  }
+
+  .lang-btn {
+    flex: 1 1 calc(33% - 8px);
+    min-width: 80px;
+    padding: 10px 6px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .lang-btn.active-ru { background: var(--ru); color: #0e0e12; }
+  .lang-btn.active-es { background: var(--es); color: #0e0e12; }
+  .lang-btn.active-en { background: var(--en); color: #0e0e12; }
+  .lang-btn.active-ja { background: var(--ja); color: #0e0e12; }
+  .lang-btn.active-ky { background: var(--ky); color: #fff; }
+
+  /* Main Card */
+  .main-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 0 16px;
+    margin-top: 20px;
+  }
+
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 14px;
+    resize: none;
+    outline: none;
+    min-height: 120px;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+  }
+
+  textarea::placeholder { color: var(--muted); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px 10px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-icon { font-size: 20px; }
+
+  .btn-play {
+    background: var(--accent);
+    color: #0e0e12;
+  }
+
+  .btn-play:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-play:active { transform: scale(0.97); }
+
+  .btn-record {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-record.recording {
+    background: var(--danger);
+    color: #fff;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .btn-record:hover { border-color: var(--accent); }
+
+  .btn-compare {
+    background: var(--surface);
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+  }
+
+  .btn-compare:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* Speed control */
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .speed-label {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    letter-spacing: 1px;
+  }
+
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+
+  .speed-val {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* Recording playback */
+  .playback-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+  }
+
+  .playback-row.hidden { display: none; }
+
+  .play-rec-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent2);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .play-rec-btn:hover { opacity: 0.8; }
+
+  .rec-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .rec-time {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+
+  /* Situation tabs */
+  .situation-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .sit-tab {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .sit-tab.active {
+    background: var(--accent);
+    color: #0e0e12;
+    border-color: var(--accent);
+  }
+
+  .sit-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+  .script-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .script-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .script-item:hover { border-color: var(--accent); }
+
+  .script-kr {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .script-foreign {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .script-item-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .script-mini-btn {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 11px;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+
+  .script-mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Saved list */
+  .saved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .saved-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .saved-item:hover { border-color: var(--muted); }
+
+  .saved-lang-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+
+  .badge-ru { background: var(--ru); color: #0e0e12; }
+  .badge-es { background: var(--es); color: #0e0e12; }
+  .badge-en { background: var(--en); color: #0e0e12; }
+  .badge-ja { background: var(--ja); color: #0e0e12; }
+  .badge-ky { background: var(--ky); color: #fff; }
+
+  .saved-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  .saved-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: var(--card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    transition: all 0.15s;
+    color: var(--text);
+  }
+
+  .icon-btn:hover { background: var(--border); }
+
+  .empty-msg {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 20px 0;
+    letter-spacing: 1px;
+  }
+
+  /* Status toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #0e0e12;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 30px;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    letter-spacing: 1px;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  /* Speaking indicator */
+  .speaking-bar {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .speaking-bar.active { opacity: 1; }
+
+  .bar {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: soundwave 0.6s ease-in-out infinite alternate;
+  }
+
+  .bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+  .bar:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+  .bar:nth-child(3) { height: 18px; animation-delay: 0.2s; }
+  .bar:nth-child(4) { height: 10px; animation-delay: 0.15s; }
+  .bar:nth-child(5) { height: 16px; animation-delay: 0.05s; }
+
+  @keyframes soundwave {
+    from { transform: scaleY(0.4); }
+    to { transform: scaleY(1); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-title">PRONOVA</div>
+  <div class="app-sub">발음 연습기</div>
+
+  <div class="lang-selector">
+    <button class="lang-btn active-ru" id="btn-ru" onclick="setLang('ru')">🇷🇺 러시아어</button>
+    <button class="lang-btn" id="btn-es" onclick="setLang('es')">🇪🇸 스페인어</button>
+    <button class="lang-btn" id="btn-en" onclick="setLang('en')">🇺🇸 영어</button>
+    <button class="lang-btn" id="btn-ja" onclick="setLang('ja')">🇯🇵 일본어</button>
+    <button class="lang-btn" id="btn-ky" onclick="setLang('ky')">🇰🇬 키르기스어</button>
+  </div>
+</header>
+
+<div class="main-card">
+
+  <!-- Script Input -->
+  <div class="section">
+    <div class="section-label">📝 스크립트 입력</div>
+    <textarea id="script-input" placeholder="여기에 러시아어 또는 스페인어 텍스트를 입력하세요..." rows="5"></textarea>
+
+    <div class="speed-row">
+      <span class="speed-label">속도</span>
+      <input type="range" id="speed-slider" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateSpeed(this.value)">
+      <span class="speed-val" id="speed-val">0.9x</span>
+    </div>
+
+    <div class="speaking-bar" id="speaking-bar">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-play" onclick="playTTS()">
+        <span class="btn-icon">🔊</span>
+        <span>발음 듣기</span>
+      </button>
+      <button class="btn btn-record" id="rec-btn" onclick="toggleRecord()">
+        <span class="btn-icon" id="rec-icon">🎙️</span>
+        <span id="rec-label">내 발음 녹음</span>
+      </button>
+    </div>
+
+    <!-- Playback row -->
+    <div class="playback-row hidden" id="playback-row">
+      <button class="play-rec-btn" onclick="playRecording()">▶</button>
+      <div>
+        <div style="font-size:13px; font-weight:600;">내 녹음</div>
+        <div class="rec-label">탭해서 재생</div>
+      </div>
+      <div class="rec-time" id="rec-time">0:00</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="controls" style="margin-top:0;">
+      <button class="btn btn-compare" id="compare-btn" disabled onclick="comparePlay()">
+        <span class="btn-icon">⚖️</span>
+        <span>순서대로 비교</span>
+      </button>
+      <button class="btn" style="background:var(--surface);border:1px solid var(--border);" onclick="saveScript()">
+        <span class="btn-icon">💾</span>
+        <span>저장</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Situation Scripts -->
+  <div class="section">
+    <div class="section-label">🌍 해외생활 예시 스크립트</div>
+    <div class="situation-tabs" id="situation-tabs">
+      <button class="sit-tab active" onclick="setSituation('mart')">🛒 마트</button>
+      <button class="sit-tab" onclick="setSituation('airport')">✈️ 공항</button>
+      <button class="sit-tab" onclick="setSituation('bank')">🏦 은행</button>
+      <button class="sit-tab" onclick="setSituation('restaurant')">🍽️ 식당</button>
+      <button class="sit-tab" onclick="setSituation('hospital')">🏥 병원</button>
+      <button class="sit-tab" onclick="setSituation('transport')">🚇 교통</button>
+    </div>
+    <div class="script-list" id="script-list"></div>
+  </div>
+
+  <!-- Saved Scripts -->
+  <div class="section">
+    <div class="section-label">📂 저장된 스크립트</div>
+    <div class="saved-list" id="saved-list">
+      <div class="empty-msg">저장된 스크립트가 없어요</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentLang = 'ru';
+  let isRecording = false;
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recordedBlob = null;
+  let recordedUrl = null;
+  let recordingTimer = null;
+  let recordingSeconds = 0;
+  let synth = window.speechSynthesis;
+  let voices = [];
+  let isSpeaking = false;
+
+  const langConfig = {
+    ru: { code: 'ru-RU', placeholder: '여기에 러시아어 텍스트를 입력하세요...\n예: Привет, как дела?' },
+    es: { code: 'es-ES', placeholder: '여기에 스페인어 텍스트를 입력하세요...\n예: Hola, ¿cómo estás?' },
+    en: { code: 'en-US', placeholder: '여기에 영어 텍스트를 입력하세요...\n예: Hello, how are you?' },
+    ja: { code: 'ja-JP', placeholder: '여기에 일본어 텍스트를 입력하세요...\n예: こんにちは、元気ですか？' },
+    ky: { code: 'ky-KG', placeholder: '여기에 키르기스어 텍스트를 입력하세요...\n예: Салам, кандайсың?' }
+  };
+
+  // Load voices
+  function loadVoices() {
+    voices = synth.getVoices();
+  }
+  loadVoices();
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    ['ru','es','en','ja','ky'].forEach(l => {
+      const btn = document.getElementById('btn-' + l);
+      btn.className = 'lang-btn' + (lang === l ? ' active-' + l : '');
+    });
+    document.getElementById('script-input').placeholder = langConfig[lang].placeholder;
+    renderScriptList();
+  }
+
+  function getVoicePrefix(lang) {
+    return { ru: 'ru', es: 'es', en: 'en', ja: 'ja', ky: 'ky' }[lang] || lang;
+  }
+
+  function updateSpeed(val) {
+    document.getElementById('speed-val').textContent = parseFloat(val).toFixed(1) + 'x';
+  }
+
+  function playTTS() {
+    const text = document.getElementById('script-input').value.trim();
+    if (!text) { showToast('텍스트를 입력해주세요!'); return; }
+
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langConfig[currentLang].code;
+    utter.rate = parseFloat(document.getElementById('speed-slider').value);
+
+    // Try to find a matching voice
+    const matchVoice = voices.find(v => v.lang.startsWith(getVoicePrefix(currentLang)));
+    if (matchVoice) utter.voice = matchVoice;
+
+    utter.onstart = () => {
+      isSpeaking = true;
+      document.getElementById('speaking-bar').classList.add('active');
+    };
+    utter.onend = () => {
+      isSpeaking = false;
+      document.getElementById('speaking-bar').classList.remove('active');
+    };
+
+    synth.speak(utter);
+  }
+
+  async function toggleRecord() {
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          recordedUrl = URL.createObjectURL(recordedBlob);
+          document.getElementById('playback-row').classList.remove('hidden');
+          document.getElementById('compare-btn').disabled = false;
+          stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        recordingSeconds = 0;
+        recordingTimer = setInterval(() => {
+          recordingSeconds++;
+          const m = Math.floor(recordingSeconds / 60);
+          const s = recordingSeconds % 60;
+          document.getElementById('rec-time').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+        }, 1000);
+        document.getElementById('rec-btn').classList.add('recording');
+        document.getElementById('rec-icon').textContent = '⏹️';
+        document.getElementById('rec-label').textContent = '녹음 중지';
+        showToast('녹음 시작!');
+      } catch(e) {
+        showToast('마이크 권한이 필요해요');
+      }
+    } else {
+      mediaRecorder.stop();
+      isRecording = false;
+      clearInterval(recordingTimer);
+      document.getElementById('rec-btn').classList.remove('recording');
+      document.getElementById('rec-icon').textContent = '🎙️';
+      document.getElementById('rec-label').textContent = '내 발음 녹음';
+      showToast('녹음 완료! ✓');
+    }
+  }
+
+  function playRecording() {
+    if (!recordedUrl) return;
+    const audio = new Audio(recordedUrl);
+    audio.play();
+  }
+
+  function comparePlay() {
+    const text = document.getElementById('script-input').value.trim();
+    if (!text) { showToast('텍스트를 입력해주세요!'); return; }
+    showToast('원어민 발음 먼저 재생...');
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langConfig[currentLang].code;
+    utter.rate = parseFloat(document.getElementById('speed-slider').value);
+    const matchVoice = voices.find(v => v.lang.startsWith(getVoicePrefix(currentLang)));
+    if (matchVoice) utter.voice = matchVoice;
+    utter.onstart = () => document.getElementById('speaking-bar').classList.add('active');
+    utter.onend = () => {
+      document.getElementById('speaking-bar').classList.remove('active');
+      setTimeout(() => {
+        showToast('내 발음 재생...');
+        playRecording();
+      }, 600);
+    };
+    synth.speak(utter);
+  }
+
+  function saveScript() {
+    const text = document.getElementById('script-input').value.trim();
+    if (!text) { showToast('저장할 텍스트를 입력해주세요!'); return; }
+    const saved = getSaved();
+    if (saved.find(s => s.text === text && s.lang === currentLang)) {
+      showToast('이미 저장된 스크립트예요'); return;
+    }
+    saved.unshift({ text, lang: currentLang, id: Date.now() });
+    localStorage.setItem('pronova_saved', JSON.stringify(saved));
+    renderSaved();
+    showToast('저장됐어요! 💾');
+  }
+
+  function getSaved() {
+    try { return JSON.parse(localStorage.getItem('pronova_saved')) || []; }
+    catch { return []; }
+  }
+
+  function renderSaved() {
+    const saved = getSaved();
+    const list = document.getElementById('saved-list');
+    if (!saved.length) {
+      list.innerHTML = '<div class="empty-msg">저장된 스크립트가 없어요</div>';
+      return;
+    }
+    list.innerHTML = saved.map(s => `
+      <div class="saved-item">
+        <span class="saved-lang-badge badge-${s.lang}">${s.lang.toUpperCase()}</span>
+        <div class="saved-text">${escHtml(s.text)}</div>
+        <div class="saved-actions">
+          <button class="icon-btn" title="불러오기" onclick="loadScript(${s.id})">📋</button>
+          <button class="icon-btn" title="바로 재생" onclick="playText('${escHtml(s.text.replace(/'/g,"\\\'"))}','${s.lang}')">🔊</button>
+          <button class="icon-btn" title="삭제" onclick="deleteScript(${s.id})">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function loadScript(id) {
+    const saved = getSaved();
+    const item = saved.find(s => s.id === id);
+    if (!item) return;
+    document.getElementById('script-input').value = item.text;
+    setLang(item.lang);
+    showToast('불러왔어요! ✓');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function playText(text, lang) {
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langConfig[lang].code;
+    utter.rate = parseFloat(document.getElementById('speed-slider').value);
+    const matchVoice = voices.find(v => v.lang.startsWith(getVoicePrefix(lang)));
+    if (matchVoice) utter.voice = matchVoice;
+    synth.speak(utter);
+  }
+
+  function deleteScript(id) {
+    const saved = getSaved().filter(s => s.id !== id);
+    localStorage.setItem('pronova_saved', JSON.stringify(saved));
+    renderSaved();
+    showToast('삭제됐어요');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // Situation scripts
+  const situationScripts = {
+    mart: [
+      { kr: '이거 얼마예요?', ru: 'Сколько это стоит?', es: '¿Cuánto cuesta esto?', en: 'How much is this?', ja: 'これはいくらですか？', ky: 'Бул канча турат?' },
+      { kr: '봉투 주세요', ru: 'Дайте мне пакет, пожалуйста.', es: 'Una bolsa, por favor.', en: 'Can I get a bag, please?', ja: '袋をください。', ky: 'Баштык бериңиз, сураныч.' },
+      { kr: '카드로 계산할게요', ru: 'Я буду платить картой.', es: 'Voy a pagar con tarjeta.', en: 'I\'ll pay by card.', ja: 'カードで支払います。', ky: 'Картам менен төлөйм.' },
+      { kr: '영수증 주세요', ru: 'Дайте мне чек, пожалуйста.', es: 'El recibo, por favor.', en: 'Can I have the receipt?', ja: 'レシートをください。', ky: 'Чек бериңиз, сураныч.' },
+      { kr: '이거 환불할 수 있나요?', ru: 'Можно вернуть этот товар?', es: '¿Puedo devolver esto?', en: 'Can I return this?', ja: 'これを返品できますか？', ky: 'Муну кайтара аламбы?' },
+    ],
+    airport: [
+      { kr: '탑승권을 확인해 주세요', ru: 'Проверьте мой посадочный талон, пожалуйста.', es: 'Por favor, revise mi tarjeta de embarque.', en: 'Please check my boarding pass.', ja: '搭乗券を確認してください。', ky: 'Менин посадка талонумду текшериңиз.' },
+      { kr: '수하물을 부치고 싶어요', ru: 'Я хочу сдать багаж.', es: 'Quiero facturar el equipaje.', en: 'I\'d like to check my luggage.', ja: '荷物を預けたいです。', ky: 'Багажымды берүүнү каалайм.' },
+      { kr: '이 비행기 어디서 타나요?', ru: 'Где посадка на этот рейс?', es: '¿Dónde es la puerta de embarque?', en: 'Where do I board this flight?', ja: 'この便はどこから乗りますか？', ky: 'Бул учак кайдан отурат?' },
+      { kr: '입국 목적은 관광입니다', ru: 'Цель моего визита — туризм.', es: 'El propósito de mi visita es el turismo.', en: 'The purpose of my visit is tourism.', ja: '訪問の目的は観光です。', ky: 'Келүүмдүн максаты — туризм.' },
+      { kr: '신고할 물건이 없어요', ru: 'У меня нет ничего для декларации.', es: 'No tengo nada que declarar.', en: 'I have nothing to declare.', ja: '申告するものはありません。', ky: 'Декларациялай турган эч нерсем жок.' },
+    ],
+    bank: [
+      { kr: '계좌를 개설하고 싶어요', ru: 'Я хочу открыть счёт.', es: 'Quiero abrir una cuenta.', en: 'I\'d like to open an account.', ja: '口座を開設したいです。', ky: 'Эсеп ачкым келет.' },
+      { kr: '환전하고 싶어요', ru: 'Я хочу обменять валюту.', es: 'Quiero cambiar dinero.', en: 'I\'d like to exchange currency.', ja: '両替をしたいです。', ky: 'Валюта алмаштырам.' },
+      { kr: '오늘 환율이 어떻게 되나요?', ru: 'Какой сегодня обменный курс?', es: '¿Cuál es el tipo de cambio hoy?', en: 'What is the exchange rate today?', ja: '今日の為替レートはいくらですか？', ky: 'Бүгүн валюта курсу кандай?' },
+      { kr: '송금하고 싶어요', ru: 'Я хочу сделать денежный перевод.', es: 'Quiero hacer una transferencia.', en: 'I\'d like to make a transfer.', ja: '送金したいです。', ky: 'Акча которгум келет.' },
+      { kr: '카드를 분실했어요', ru: 'Я потерял(а) свою карту.', es: 'He perdido mi tarjeta.', en: 'I lost my card.', ja: 'カードをなくしました。', ky: 'Картамды жоготтум.' },
+    ],
+    restaurant: [
+      { kr: '메뉴 주세요', ru: 'Дайте мне меню, пожалуйста.', es: 'El menú, por favor.', en: 'Can I have the menu, please?', ja: 'メニューをください。', ky: 'Меню бериңиз, сураныч.' },
+      { kr: '2명 자리 있나요?', ru: 'Есть ли столик на двоих?', es: '¿Tienen mesa para dos?', en: 'Do you have a table for two?', ja: '2名で席はありますか？', ky: 'Эки адамга стол барбы?' },
+      { kr: '이거로 주세요', ru: 'Я возьму это, пожалуйста.', es: 'Esto, por favor.', en: 'I\'ll have this one, please.', ja: 'これをください。', ky: 'Муну бериңиз, сураныч.' },
+      { kr: '저는 채식주의자예요', ru: 'Я вегетарианец/вегетарианка.', es: 'Soy vegetariano/a.', en: 'I\'m vegetarian.', ja: '私はベジタリアンです。', ky: 'Мен вегетарианмын.' },
+      { kr: '계산서 주세요', ru: 'Принесите счёт, пожалуйста.', es: 'La cuenta, por favor.', en: 'Check, please.', ja: 'お会計をお願いします。', ky: 'Эсепти бериңиз, сураныч.' },
+    ],
+    hospital: [
+      { kr: '배가 아파요', ru: 'У меня болит живот.', es: 'Me duele el estómago.', en: 'I have a stomachache.', ja: 'お腹が痛いです。', ky: 'Менин курсагым ооруйт.' },
+      { kr: '머리가 아파요', ru: 'У меня болит голова.', es: 'Me duele la cabeza.', en: 'I have a headache.', ja: '頭が痛いです。', ky: 'Менин башым ооруйт.' },
+      { kr: '열이 있어요', ru: 'У меня температура.', es: 'Tengo fiebre.', en: 'I have a fever.', ja: '熱があります。', ky: 'Менин ысытмам бар.' },
+      { kr: '알레르기가 있어요', ru: 'У меня аллергия.', es: 'Tengo alergia.', en: 'I have an allergy.', ja: 'アレルギーがあります。', ky: 'Менде аллергия бар.' },
+      { kr: '처방전 주세요', ru: 'Дайте мне рецепт, пожалуйста.', es: 'La receta, por favor.', en: 'Can I have a prescription?', ja: '処方箋をください。', ky: 'Рецепт бериңиз, сураныч.' },
+    ],
+    transport: [
+      { kr: '이 버스 어디까지 가나요?', ru: 'До какой остановки идёт этот автобус?', es: '¿Hasta dónde va este autobús?', en: 'Where does this bus go?', ja: 'このバスはどこまで行きますか？', ky: 'Бул автобус кайда чейин барат?' },
+      { kr: '~까지 얼마예요?', ru: 'Сколько стоит до ...?', es: '¿Cuánto cuesta hasta ...?', en: 'How much is it to ...?', ja: '〜までいくらですか？', ky: '...чейин канча турат?' },
+      { kr: '택시 불러주세요', ru: 'Вызовите такси, пожалуйста.', es: 'Llame un taxi, por favor.', en: 'Please call a taxi.', ja: 'タクシーを呼んでください。', ky: 'Такси чакырыңыз, сураныч.' },
+      { kr: '여기서 내려주세요', ru: 'Остановите здесь, пожалуйста.', es: 'Pare aquí, por favor.', en: 'Please stop here.', ja: 'ここで降ろしてください。', ky: 'Бул жерде токтотуңуз, сураныч.' },
+      { kr: '지하철역이 어디예요?', ru: 'Где находится станция метро?', es: '¿Dónde está la estación de metro?', en: 'Where is the subway station?', ja: '地下鉄の駅はどこですか？', ky: 'Метро бекети кайда?' },
+    ],
+  };
+
+  let currentSituation = 'mart';
+
+  function setSituation(sit) {
+    currentSituation = sit;
+    document.querySelectorAll('.sit-tab').forEach((t, i) => {
+      const keys = ['mart','airport','bank','restaurant','hospital','transport'];
+      t.classList.toggle('active', keys[i] === sit);
+    });
+    renderScriptList();
+  }
+
+  function renderScriptList() {
+    const list = document.getElementById('script-list');
+    const scripts = situationScripts[currentSituation];
+    list.innerHTML = scripts.map((s, i) => {
+      const foreign = s[currentLang] || s.en;
+      return `
+        <div class="script-item">
+          <div class="script-kr">${s.kr}</div>
+          <div class="script-foreign">${escHtml(foreign)}</div>
+          <div class="script-item-actions">
+            <button class="script-mini-btn" onclick="playScriptItem(${i})">🔊 듣기</button>
+            <button class="script-mini-btn" onclick="loadScriptItem(${i})">📋 가져오기</button>
+            <button class="script-mini-btn" onclick="saveScriptItem(${i})">💾 저장</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function playScriptItem(i) {
+    const s = situationScripts[currentSituation][i];
+    const text = s[currentLang] || s.en;
+    synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langConfig[currentLang].code;
+    utter.rate = parseFloat(document.getElementById('speed-slider').value);
+    const matchVoice = voices.find(v => v.lang.startsWith(getVoicePrefix(currentLang)));
+    if (matchVoice) utter.voice = matchVoice;
+    synth.speak(utter);
+  }
+
+  function loadScriptItem(i) {
+    const s = situationScripts[currentSituation][i];
+    const text = s[currentLang] || s.en;
+    document.getElementById('script-input').value = text;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('가져왔어요! 연습해보세요 ✓');
+  }
+
+  function saveScriptItem(i) {
+    const s = situationScripts[currentSituation][i];
+    const text = s[currentLang] || s.en;
+    const saved = getSaved();
+    if (saved.find(x => x.text === text && x.lang === currentLang)) {
+      showToast('이미 저장된 스크립트예요'); return;
+    }
+    saved.unshift({ text, lang: currentLang, id: Date.now() });
+    localStorage.setItem('pronova_saved', JSON.stringify(saved));
+    renderSaved();
+    showToast('저장됐어요! 💾');
+  }
+
+  // Init
+  renderSaved();
+  renderScriptList();
+  setLang('ru');
+</script>
+</body>
+</html>
