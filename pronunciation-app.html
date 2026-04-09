@@ -74,6 +74,29 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
 
 .divider { height: 1px; background: var(--border); margin: 12px 0; }
 
+
+/* REPEAT MODE */
+.repeat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 10px; }
+.repeat-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.repeat-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.repeat-count-row { display: flex; align-items: center; gap: 8px; flex: 1; }
+.repeat-count-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.repeat-count-select { background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Noto Sans KR',sans-serif; font-size: 13px; padding: 6px 10px; outline: none; cursor: pointer; }
+.repeat-gap-row { display: flex; align-items: center; gap: 8px; flex: 1; }
+.repeat-gap-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.repeat-gap-select { background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Noto Sans KR',sans-serif; font-size: 13px; padding: 6px 10px; outline: none; cursor: pointer; }
+.repeat-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0e0e12; font-family: 'Noto Sans KR',sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.repeat-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.repeat-btn.stopping { background: var(--danger); color: white; }
+.repeat-status-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; background: var(--card); border-radius: 10px; padding: 10px 14px; display: none; }
+.repeat-status-row.visible { display: flex; }
+.repeat-status-text { font-size: 13px; color: var(--text); }
+.repeat-status-count { font-family: 'Bebas Neue',sans-serif; font-size: 24px; color: var(--accent); letter-spacing: 2px; }
+.repeat-phase { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.repeat-progress { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; display: none; }
+.repeat-progress.visible { display: block; }
+.repeat-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+
 /* TRANSLATE */
 .translate-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 10px; }
 .translate-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
@@ -235,6 +258,45 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px;
       <button class="btn" style="background:var(--surface);border:1px solid var(--border);" onclick="saveScript()">
         <span class="btn-icon">💾</span><span>저장</span>
       </button>
+    </div>
+
+    <!-- 반복 재생 -->
+    <div class="repeat-box">
+      <div class="repeat-label">🔁 듣고 따라하기 반복 연습</div>
+      <div class="repeat-controls">
+        <div class="repeat-count-row">
+          <span class="repeat-count-label">반복</span>
+          <select class="repeat-count-select" id="repeat-count">
+            <option value="2">2회</option>
+            <option value="3">3회</option>
+            <option value="5" selected>5회</option>
+            <option value="10">10회</option>
+            <option value="0">무한</option>
+          </select>
+        </div>
+        <div class="repeat-gap-row">
+          <span class="repeat-gap-label">따라할 시간</span>
+          <select class="repeat-gap-select" id="repeat-gap">
+            <option value="2000">2초</option>
+            <option value="3000" selected>3초</option>
+            <option value="5000">5초</option>
+            <option value="7000">7초</option>
+          </select>
+        </div>
+      </div>
+      <button class="repeat-btn" id="repeat-btn" onclick="toggleRepeat()">
+        ▶ 듣고 따라하기 시작
+      </button>
+      <div class="repeat-progress" id="repeat-progress">
+        <div class="repeat-progress-bar" id="repeat-progress-bar"></div>
+      </div>
+      <div class="repeat-status-row" id="repeat-status-row">
+        <div>
+          <div class="repeat-status-text" id="repeat-status-text">준비 중...</div>
+          <div class="repeat-phase" id="repeat-phase"></div>
+        </div>
+        <div class="repeat-status-count" id="repeat-status-count">0/5</div>
+      </div>
     </div>
     <div class="counter-row">
       <div class="counter-label">🔁 오늘 연습 횟수</div>
@@ -767,6 +829,149 @@ function saveTranslated() {
   saved.unshift({ text: translatedText, lang: currentLang, id: Date.now(), kr: translatedKr });
   localStorage.setItem('pronova_saved', JSON.stringify(saved));
   renderSaved(); showToast('저장됐어요! 💾');
+}
+
+
+// ===== REPEAT MODE =====
+let repeatActive = false;
+let repeatTimeout = null;
+let repeatCurrent = 0;
+let repeatTotal = 5;
+
+function toggleRepeat() {
+  if (repeatActive) {
+    stopRepeat();
+  } else {
+    startRepeat();
+  }
+}
+
+function startRepeat() {
+  audioUnlocked = false; // 모바일 매번 재활성화
+  const text = document.getElementById('script-input').value.trim();
+  if (!text) { showToast('먼저 텍스트를 입력해주세요!'); return; }
+
+  repeatTotal = parseInt(document.getElementById('repeat-count').value);
+  repeatCurrent = 0;
+  repeatActive = true;
+
+  // UI 업데이트
+  document.getElementById('repeat-btn').textContent = '⏹ 반복 중지';
+  document.getElementById('repeat-btn').classList.add('stopping');
+  document.getElementById('repeat-status-row').classList.add('visible');
+  document.getElementById('repeat-progress').classList.add('visible');
+  updateRepeatStatus('듣기 준비 중...', '');
+
+  runRepeatCycle();
+}
+
+function stopRepeat() {
+  repeatActive = false;
+  clearTimeout(repeatTimeout);
+  synth.cancel();
+
+  document.getElementById('repeat-btn').textContent = '▶ 듣고 따라하기 시작';
+  document.getElementById('repeat-btn').classList.remove('stopping');
+  document.getElementById('repeat-status-row').classList.remove('visible');
+  document.getElementById('repeat-progress').classList.remove('visible');
+  document.getElementById('speaking-bar').classList.remove('active');
+  showToast('반복 연습 중지됐어요');
+}
+
+function updateRepeatStatus(text, phase) {
+  const total = repeatTotal === 0 ? '∞' : repeatTotal;
+  document.getElementById('repeat-status-text').textContent = text;
+  document.getElementById('repeat-phase').textContent = phase;
+  document.getElementById('repeat-status-count').textContent = `${repeatCurrent}/${total}`;
+
+  // progress bar
+  if (repeatTotal > 0) {
+    const pct = (repeatCurrent / repeatTotal) * 100;
+    document.getElementById('repeat-progress-bar').style.width = pct + '%';
+  }
+}
+
+function runRepeatCycle() {
+  if (!repeatActive) return;
+
+  if (repeatTotal > 0 && repeatCurrent >= repeatTotal) {
+    showToast(`🎉 ${repeatTotal}회 반복 완료!`);
+    stopRepeat();
+    return;
+  }
+
+  repeatCurrent++;
+  const gap = parseInt(document.getElementById('repeat-gap').value);
+  const text = document.getElementById('script-input').value.trim();
+
+  updateRepeatStatus(`${repeatCurrent}번째 듣는 중...`, '🔊 집중해서 들어보세요');
+  incrementCounter();
+
+  // 모바일 대응: AudioContext unlock 후 speak
+  unlockAudio(() => {
+    if (!repeatActive) return;
+    voices = synth.getVoices();
+    synth.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langConfig[currentLang]?.code || 'en-US';
+    utter.rate = parseFloat(document.getElementById('speed-slider')?.value || '0.9');
+    const prefix = {ru:'ru',es:'es',en:'en',ja:'ja',ky:'ky'}[currentLang];
+    const v = voices.find(v => v.lang.startsWith(prefix));
+    if (v) utter.voice = v;
+
+    utter.onstart = () => document.getElementById('speaking-bar').classList.add('active');
+    utter.onend = () => {
+      if (!repeatActive) return;
+      document.getElementById('speaking-bar').classList.remove('active');
+
+      // 따라할 시간 카운트다운
+      let remaining = gap / 1000;
+      updateRepeatStatus(`따라 말해보세요! (${remaining}초)`, '🎙️ 지금 따라하세요!');
+
+      const countdown = setInterval(() => {
+        if (!repeatActive) { clearInterval(countdown); return; }
+        remaining = Math.max(0, remaining - 1);
+        if (remaining > 0) {
+          updateRepeatStatus(`따라 말해보세요! (${remaining}초)`, '🎙️ 지금 따라하세요!');
+        } else {
+          clearInterval(countdown);
+        }
+      }, 1000);
+
+      repeatTimeout = setTimeout(() => {
+        if (!repeatActive) return;
+        clearInterval(countdown);
+        // 모바일: 다음 사이클도 synth 재시작
+        synth.cancel();
+        runRepeatCycle();
+      }, gap);
+    };
+    utter.onerror = (e) => {
+      if (!repeatActive) return;
+      document.getElementById('speaking-bar').classList.remove('active');
+      // 모바일에서 오류 시 잠깐 후 재시도
+      repeatTimeout = setTimeout(() => {
+        synth.cancel();
+        runRepeatCycle();
+      }, 1500);
+    };
+
+    // 모바일 Safari/Chrome 대응: speak 전 cancel 후 딜레이
+    setTimeout(() => { synth.speak(utter); }, 100);
+  });
+}
+
+// 모바일 오디오 잠금 해제
+let audioUnlocked = false;
+function unlockAudio(callback) {
+  if (audioUnlocked) { callback(); return; }
+  // 빈 utterance로 오디오 컨텍스트 활성화
+  const unlock = new SpeechSynthesisUtterance('');
+  unlock.volume = 0;
+  unlock.onend = () => { audioUnlocked = true; callback(); };
+  unlock.onerror = () => { audioUnlocked = true; callback(); };
+  synth.speak(unlock);
 }
 
 // INIT
